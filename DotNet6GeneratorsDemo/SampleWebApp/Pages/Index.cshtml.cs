@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Runtime.CompilerServices;
 
 namespace SampleWebApp.Pages
 {
-    public class IndexModel : PageModel
+    public partial class IndexModel : PageModel
     {
         private readonly ILogger<IndexModel> _logger;
 
@@ -14,7 +15,7 @@ namespace SampleWebApp.Pages
 
         public void OnGet()
         {
-
+            _logger.LogInformation("Hello from {FirstName} {LastName}!", "Martin", "Ullrich");
         }
     }
 }
