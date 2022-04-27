@@ -93,6 +93,8 @@ namespace {@namespace}
 {SyntaxFacts.GetText(targetType.DeclaredAccessibility)} partial class {targetType.Name} : System.ComponentModel.INotifyPropertyChanged
 {{
     public event System.ComponentModel.PropertyChangedEventHandler{(useNrtAnnotations ? "?" : "")} PropertyChanged;
+
+    protected void OnPropertyChanged(string name) => this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
 ");
 
             foreach (var interfaceType in implementationToGenerate.Interfaces)
@@ -115,8 +117,11 @@ namespace {@namespace}
         }}
         set
         {{
-            this.{property.Name}BackingField = value;
-            this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof({property.Name})));
+            if (value != this.{property.Name}BackingField)
+            {{
+                this.{property.Name}BackingField = value;
+                this.OnPropertyChanged(nameof({property.Name}));
+            }}
         }}
     }}
 ");

@@ -3,13 +3,14 @@
 using System;
 using AutoNotify;
 
-Console.WriteLine("Hello, World!");
 
 var person = new PersonViewModel
 {
     FirstName = "Martin",
     LastName = "Ullrich"
 };
+
+Console.WriteLine($"Staring out with person: {person.FirstName} {person.LastName}");
 
 person.PropertyChanged += (obj, propertyName) => Console.WriteLine($"Person changed (Property {propertyName}): {person.FirstName} {person.LastName}");
 

@@ -8,6 +8,8 @@ public partial class PersonViewModel : System.ComponentModel.INotifyPropertyChan
 {
     public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
 
+    protected void OnPropertyChanged(string name) => this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
+
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     private string FirstNameBackingField = null!;
     public string FirstName
@@ -18,8 +20,11 @@ public partial class PersonViewModel : System.ComponentModel.INotifyPropertyChan
         }
         set
         {
-            this.FirstNameBackingField = value;
-            this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(FirstName)));
+            if (value != this.FirstNameBackingField)
+            {
+                this.FirstNameBackingField = value;
+                this.OnPropertyChanged(nameof(FirstName));
+            }
         }
     }
 
@@ -33,8 +38,11 @@ public partial class PersonViewModel : System.ComponentModel.INotifyPropertyChan
         }
         set
         {
-            this.LastNameBackingField = value;
-            this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(LastName)));
+            if (value != this.LastNameBackingField)
+            {
+                this.LastNameBackingField = value;
+                this.OnPropertyChanged(nameof(LastName));
+            }
         }
     }
 
