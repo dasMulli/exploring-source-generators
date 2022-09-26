@@ -5,7 +5,11 @@ VisualStudioVersion = 17.0.31710.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SamplePersonReader", "SamplePersonReader\SamplePersonReader.csproj", "{913145E4-CB6D-496E-B187-B5F1EAA91A47}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleWebApp", "SampleWebApp\SampleWebApp.csproj", "{89B31607-BEAD-4590-A48F-EFD9BF06D87A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleWebApp", "SampleWebApp\SampleWebApp.csproj", "{89B31607-BEAD-4590-A48F-EFD9BF06D87A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleRegexMatcher", "SampleRegexMatcher\SampleRegexMatcher.csproj", "{692EBC83-A8D5-46F9-AD03-AA0365425B4B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SamplePInvoker", "SamplePInvoker\SamplePInvoker.csproj", "{E9BBD104-F122-46FB-90AC-2473D34D7B71}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{89B31607-BEAD-4590-A48F-EFD9BF06D87A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89B31607-BEAD-4590-A48F-EFD9BF06D87A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89B31607-BEAD-4590-A48F-EFD9BF06D87A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{692EBC83-A8D5-46F9-AD03-AA0365425B4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{692EBC83-A8D5-46F9-AD03-AA0365425B4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{692EBC83-A8D5-46F9-AD03-AA0365425B4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{692EBC83-A8D5-46F9-AD03-AA0365425B4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9BBD104-F122-46FB-90AC-2473D34D7B71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9BBD104-F122-46FB-90AC-2473D34D7B71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9BBD104-F122-46FB-90AC-2473D34D7B71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9BBD104-F122-46FB-90AC-2473D34D7B71}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
