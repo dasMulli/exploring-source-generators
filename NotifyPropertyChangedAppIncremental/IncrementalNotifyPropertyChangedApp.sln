@@ -3,11 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31710.8
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotifyPropertyChangedApp", "NotifyPropertyChangedApp\NotifyPropertyChangedApp.csproj", "{CEFBF07A-F746-438A-B246-49FFCD32ECD1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotifyPropertyChangedApp", "NotifyPropertyChangedApp\NotifyPropertyChangedApp.csproj", "{CEFBF07A-F746-438A-B246-49FFCD32ECD1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "INotifyPropertyChangedSourceGenerator", "INotifyPropertyChangedSourceGenerator\INotifyPropertyChangedSourceGenerator.csproj", "{9244CCA9-C2D1-4287-B071-FFCBDF0BBFA7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "INotifyPropertyChangedSourceGenerator", "INotifyPropertyChangedSourceGenerator\INotifyPropertyChangedSourceGenerator.csproj", "{9244CCA9-C2D1-4287-B071-FFCBDF0BBFA7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "INotifyPropertyChangedSourceGeneratorTests", "INotifyPropertyChangedSourceGeneratorTests\INotifyPropertyChangedSourceGeneratorTests.csproj", "{66C77093-35FC-409F-8BD0-741782F854D8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "INotifyPropertyChangedSourceGeneratorTests", "INotifyPropertyChangedSourceGeneratorTests\INotifyPropertyChangedSourceGeneratorTests.csproj", "{66C77093-35FC-409F-8BD0-741782F854D8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B2CCEA4B-C700-40E5-B31C-370D566154AB}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
