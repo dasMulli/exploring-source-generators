@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -142,7 +143,8 @@ namespace {@namespace}
             return sb.ToString();
         }
 
-        public class ImplementationToGenerate {
+        public class ImplementationToGenerate : IEquatable<ImplementationToGenerate?>
+        {
             public ImplementationToGenerate(INamedTypeSymbol Type, IList<INamedTypeSymbol> Interfaces)
             {
                 this.Type = Type;
@@ -152,7 +154,37 @@ namespace {@namespace}
             public INamedTypeSymbol Type { get; }
 
             public IList<INamedTypeSymbol> Interfaces { get; }
-        };
+
+            public override bool Equals(object? obj)
+            {
+                return Equals(obj as ImplementationToGenerate);
+            }
+
+            public bool Equals(ImplementationToGenerate? other)
+            {
+                return other is not null &&
+                       EqualityComparer<INamedTypeSymbol>.Default.Equals(Type, other.Type) &&
+                       EqualityComparer<IList<INamedTypeSymbol>>.Default.Equals(Interfaces, other.Interfaces);
+            }
+
+            public override int GetHashCode()
+            {
+                int hashCode = -466023922;
+                hashCode = hashCode * -1521134295 + EqualityComparer<INamedTypeSymbol>.Default.GetHashCode(Type);
+                hashCode = hashCode * -1521134295 + EqualityComparer<IList<INamedTypeSymbol>>.Default.GetHashCode(Interfaces);
+                return hashCode;
+            }
+
+            public static bool operator ==(ImplementationToGenerate? left, ImplementationToGenerate? right)
+            {
+                return EqualityComparer<ImplementationToGenerate>.Default.Equals(left, right);
+            }
+
+            public static bool operator !=(ImplementationToGenerate? left, ImplementationToGenerate? right)
+            {
+                return !(left == right);
+            }
+        }
     }
 
 
