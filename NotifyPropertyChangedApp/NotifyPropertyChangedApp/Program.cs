@@ -12,7 +12,7 @@ var person = new PersonViewModel
 
 Console.WriteLine($"Staring out with person: {person.FirstName} {person.LastName}");
 
-person.PropertyChanged += (obj, propertyName) => Console.WriteLine($"Person changed (Property {propertyName}): {person.FirstName} {person.LastName}");
+person.PropertyChanged += (obj, eventArgs) => Console.WriteLine($"Person changed (Property {eventArgs.PropertyName}): {person.FirstName} {person.LastName}");
 
 person.LastName = "Bar";
 person.FirstName = "Foo";
