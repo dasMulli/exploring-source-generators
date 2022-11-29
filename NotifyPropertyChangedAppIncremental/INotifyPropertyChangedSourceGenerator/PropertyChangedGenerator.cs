@@ -39,153 +39,243 @@ namespace AutoNotify
 
             var useNrtAnnotationsProvider = context.CompilationProvider.Select(static (compilation, _) => compilation.Options.NullableContextOptions != NullableContextOptions.Disable);
 
-            var outputs = context.SyntaxProvider
-                .CreateSyntaxProvider(static (syntax, _) => syntax is ClassDeclarationSyntax classDeclarationSyntax && classDeclarationSyntax.AttributeLists.Count > 0,
-                static (ctx, _) =>
-                {
-                    var cds = ctx.Node as ClassDeclarationSyntax;
+            var propertyChangedGenerationInputs = context.SyntaxProvider
+                .ForAttributeWithMetadataName(
+                  fullyQualifiedMetadataName: "AutoNotify.AutoNotifyAttribute",
+                  predicate: static (syntax, _) => syntax is ClassDeclarationSyntax cds,
+                  transform: static (attributeSyntaxContext, _) =>
+                  {
+                      var interfacesToImplement = new List<INamedTypeSymbol>(attributeSyntaxContext.Attributes.Length);
 
-                    var typeSymbol = ctx.SemanticModel.GetDeclaredSymbol(ctx.Node) as INamedTypeSymbol;
-                    if (typeSymbol is null)
-                    {
-                        return null;
-                    }
+                      foreach (var attributeData in attributeSyntaxContext.Attributes)
+                      {
+                          if (attributeData.ConstructorArguments.Length == 1
+                            && attributeData.ConstructorArguments[0].Value is INamedTypeSymbol namedTypeSymbol
+                            && namedTypeSymbol.TypeKind == TypeKind.Interface)
+                          {
+                              interfacesToImplement.Add(namedTypeSymbol);
+                          }
+                      }
 
-                    var interfacesToImplement = typeSymbol.GetAttributes()
-                        .Where(attr => attr.AttributeClass!.ToDisplayString() == "AutoNotify.AutoNotifyAttribute"
-                        && attr.ConstructorArguments.Count() == 1
-                        && attr.ConstructorArguments[0].Type is not null // ensure no type determination error exists
-                        && attr.ConstructorArguments[0].Value is INamedTypeSymbol)
-                        .Select(attr => (INamedTypeSymbol)attr.ConstructorArguments[0].Value!)
-                        .ToList();
+                      return new ImplementationToGenerate((INamedTypeSymbol)attributeSyntaxContext.TargetSymbol, interfacesToImplement);
+                  }
+                )
+                .WithComparer(EqualityComparer<ImplementationToGenerate>.Default)
+                .WithTrackingName("ImplementationsToGenerate")
+                .Combine(useNrtAnnotationsProvider);
 
-                    if (interfacesToImplement.Count == 0)
-                    {
-                        return null;
-                    }
-
-                    return new ImplementationToGenerate(typeSymbol, interfacesToImplement);
-                })
-                .Where(x => x is not null)
-                .Combine(useNrtAnnotationsProvider)
-                .Select(static (inputs, _) =>
-                {
-                    var (implementationToGenerate, useNrtAnnotations) = inputs;
-                    return (Name: implementationToGenerate!.Type.Name + ".gen.cs", Content: GenerateImplementation(implementationToGenerate!, useNrtAnnotations));
-                });
-
-            context.RegisterSourceOutput(outputs, (ctx, item) => ctx.AddSource(item.Name, item.Content));
+            context.RegisterSourceOutput(propertyChangedGenerationInputs, (ctx, inputItem) => 
+            {
+                var (implementationToGenerate, useNrtAnnotations) = inputItem;
+                ctx.AddSource(implementationToGenerate.TypeName + ".gen.cs", GenerateImplementation(implementationToGenerate, useNrtAnnotations));
+            });
         }
 
         private static string GenerateImplementation(ImplementationToGenerate implementationToGenerate, bool useNrtAnnotations)
         {
-            var targetType = implementationToGenerate.Type;
-            var @namespace = targetType.ContainingNamespace?.IsGlobalNamespace == true ? null : targetType.ContainingNamespace?.Name;
+            var @namespace = implementationToGenerate.Namespace;
 
             var sb = new StringBuilder();
             if (@namespace is not null)
             {
-                sb.Append($@"
-namespace {@namespace}
-{{");
+                sb.Append($$"""
+    
+                            namespace {{@namespace}}
+                            {
+    
+                            """);
             }
 
-            sb.Append($@"
-{SyntaxFacts.GetText(targetType.DeclaredAccessibility)} partial class {targetType.Name} : System.ComponentModel.INotifyPropertyChanged
-{{
-    public event System.ComponentModel.PropertyChangedEventHandler{(useNrtAnnotations ? "?" : "")} PropertyChanged;
+            sb.Append($$"""
+                        {{SyntaxFacts.GetText(implementationToGenerate.DeclaredAccessibility)}} partial class {{implementationToGenerate.TypeName}} : System.ComponentModel.INotifyPropertyChanged
+                        {
+                            public event System.ComponentModel.PropertyChangedEventHandler{{(useNrtAnnotations ? "?" : "")}} PropertyChanged;
 
-    protected void OnPropertyChanged(string name) => this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
-");
+                            protected void OnPropertyChanged(string name) => this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
+    
+                        """);
 
-            foreach (var interfaceType in implementationToGenerate.Interfaces)
+            foreach (var interfaceToGenerate in implementationToGenerate.Interfaces)
             {
-                foreach (var property in interfaceType.GetMembers().OfType<IPropertySymbol>())
+                foreach (var property in interfaceToGenerate.PropertiesToGenerate)
                 {
                     string assignment = string.Empty;
-                    if (useNrtAnnotations && property.Type.IsReferenceType && property.Type.NullableAnnotation != NullableAnnotation.Annotated)
+                    if (useNrtAnnotations && property.IsReferenceType && property.NullableAnnotation != NullableAnnotation.Annotated)
                     {
                         assignment = " = null!";
                     }
-                    sb.Append($@"
-    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    private {property.Type.ToDisplayString()} {property.Name}BackingField{assignment};
-    public {property.Type.ToDisplayString()} {property.Name}
-    {{
-        get
-        {{
-            return this.{property.Name}BackingField;
-        }}
-        set
-        {{
-            if (value != this.{property.Name}BackingField)
-            {{
-                this.{property.Name}BackingField = value;
-                this.OnPropertyChanged(nameof({property.Name}));
-            }}
-        }}
-    }}
-");
+                    sb.Append($$"""
+    
+                                [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+                                private {{property.TypeName}} {{property.Name}}BackingField{{assignment}};
+                                public {{property.TypeName}} {{property.Name}}
+                                {
+                                    get
+                                    {
+                                        return this.{{property.Name}}BackingField;
+                                    }
+                                    set
+                                    {
+                                        if (value != this.{{property.Name}}BackingField)
+                                        {
+                                            this.{{property.Name}}BackingField = value;
+                                            this.OnPropertyChanged(nameof({{property.Name}}));
+                                        }
+                                    }
+                                }
+    
+                            """);
                 }
             }
 
-            sb.Append(@"
-}
-");
+            sb.Append("""
+                        
+                        }
+                        
+                        """);
 
             if (@namespace is not null)
             {
-                sb.Append(@"
-}
-");
+                sb.Append("""
+                            
+                            }
+                            
+                            """);
             }
 
             return sb.ToString();
         }
 
-        public class ImplementationToGenerate : IEquatable<ImplementationToGenerate?>
+        public class ImplementationToGenerate : IEquatable<ImplementationToGenerate>
         {
-            public ImplementationToGenerate(INamedTypeSymbol Type, IList<INamedTypeSymbol> Interfaces)
+            public ImplementationToGenerate(INamedTypeSymbol type, IList<INamedTypeSymbol> interfaces)
             {
-                this.Type = Type;
-                this.Interfaces = Interfaces;
+                TypeName = type.Name;
+                Namespace = type.ContainingNamespace?.IsGlobalNamespace == true ? null : type.ContainingNamespace?.Name;
+                DeclaredAccessibility = type.DeclaredAccessibility;
+                this.Interfaces = interfaces.Select(static i => new InterfaceToGenerate(i)).ToList();
             }
 
-            public INamedTypeSymbol Type { get; }
+            public string TypeName { get; }
+            
+            public string? Namespace { get; }
 
-            public IList<INamedTypeSymbol> Interfaces { get; }
+            public Accessibility DeclaredAccessibility { get; }
 
-            public override bool Equals(object? obj)
-            {
-                return Equals(obj as ImplementationToGenerate);
-            }
+            public IList<InterfaceToGenerate> Interfaces { get; }
 
             public bool Equals(ImplementationToGenerate? other)
             {
-                return other is not null &&
-                       EqualityComparer<INamedTypeSymbol>.Default.Equals(Type, other.Type) &&
-                       EqualityComparer<IList<INamedTypeSymbol>>.Default.Equals(Interfaces, other.Interfaces);
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return TypeName == other.TypeName && Namespace == other.Namespace && DeclaredAccessibility == other.DeclaredAccessibility && Interfaces.SequenceEqual(other.Interfaces);
+            }
+
+            public override bool Equals(object? obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((ImplementationToGenerate) obj);
             }
 
             public override int GetHashCode()
             {
-                int hashCode = -466023922;
-                hashCode = hashCode * -1521134295 + EqualityComparer<INamedTypeSymbol>.Default.GetHashCode(Type);
-                hashCode = hashCode * -1521134295 + EqualityComparer<IList<INamedTypeSymbol>>.Default.GetHashCode(Interfaces);
-                return hashCode;
+                unchecked
+                {
+                    var hashCode = TypeName.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (Namespace != null ? Namespace.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (int) DeclaredAccessibility;
+                    hashCode = (hashCode * 397) ^ Interfaces.GetHashCode();
+                    return hashCode;
+                }
+            }
+        }
+
+        public class InterfaceToGenerate : IEquatable<InterfaceToGenerate>
+        {
+            public InterfaceToGenerate(INamedTypeSymbol interfaceType)
+            {
+                this.Name = interfaceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                this.PropertiesToGenerate = interfaceType
+                    .GetMembers()
+                    .OfType<IPropertySymbol>()
+                    .Select(static p => new PropertyToGenerate(p))
+                    .ToList();
+            }
+            
+            public string Name { get; }
+
+            public IList<PropertyToGenerate> PropertiesToGenerate { get; }
+
+            public bool Equals(InterfaceToGenerate? other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return Name == other.Name && PropertiesToGenerate.SequenceEqual(other.PropertiesToGenerate);
             }
 
-            public static bool operator ==(ImplementationToGenerate? left, ImplementationToGenerate? right)
+            public override bool Equals(object? obj)
             {
-                return EqualityComparer<ImplementationToGenerate>.Default.Equals(left, right);
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((InterfaceToGenerate) obj);
             }
 
-            public static bool operator !=(ImplementationToGenerate? left, ImplementationToGenerate? right)
+            public override int GetHashCode()
             {
-                return !(left == right);
+                unchecked
+                {
+                    return (Name.GetHashCode() * 397) ^ PropertiesToGenerate.GetHashCode();
+                }
+            }
+        }
+
+        public class PropertyToGenerate : IEquatable<PropertyToGenerate>
+        {
+            public PropertyToGenerate(IPropertySymbol propertySymbol)
+            {
+                this.Name = propertySymbol.Name;
+                this.TypeName = propertySymbol.Type.ToDisplayString();
+                this.IsReferenceType = propertySymbol.Type.IsReferenceType;
+                this.NullableAnnotation = propertySymbol.Type.NullableAnnotation;
+            }
+
+            public string Name { get; }
+
+            public string TypeName { get; }
+
+            public bool IsReferenceType { get; }
+
+            public NullableAnnotation NullableAnnotation { get; }
+
+            public bool Equals(PropertyToGenerate? other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return Name == other.Name && TypeName == other.TypeName && IsReferenceType == other.IsReferenceType && NullableAnnotation == other.NullableAnnotation;
+            }
+
+            public override bool Equals(object? obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((PropertyToGenerate) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = Name.GetHashCode();
+                    hashCode = (hashCode * 397) ^ TypeName.GetHashCode();
+                    hashCode = (hashCode * 397) ^ IsReferenceType.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (int) NullableAnnotation;
+                    return hashCode;
+                }
             }
         }
     }
-
-
 }

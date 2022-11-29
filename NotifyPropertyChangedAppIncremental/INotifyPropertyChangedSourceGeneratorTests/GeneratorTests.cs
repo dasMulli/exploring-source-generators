@@ -80,7 +80,7 @@ public partial class PersonViewModel : IPersonViewModel
 {
 }
 }",
-                    CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp10))
+                    CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp11))
                 },
                 new[]
                 {
