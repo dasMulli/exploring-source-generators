@@ -9,10 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!--<ProjectReference
+    <ProjectReference
       Include="..\INotifyPropertyChangedSourceGenerator\INotifyPropertyChangedSourceGenerator.csproj"
       OutputItemType="Analyzer"
-      ReferenceOutputAssembly="false" />-->
+      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

@@ -37,6 +37,8 @@ namespace AutoNotify
     }
 }", Encoding.UTF8)));
 
+            
+
             var useNrtAnnotationsProvider = context.CompilationProvider.Select(static (compilation, _) => compilation.Options.NullableContextOptions != NullableContextOptions.Disable);
 
             var propertyChangedGenerationInputs = context.SyntaxProvider
@@ -146,6 +148,7 @@ namespace AutoNotify
             return sb.ToString();
         }
 
+        
         public class ImplementationToGenerate : IEquatable<ImplementationToGenerate>
         {
             public ImplementationToGenerate(INamedTypeSymbol type, IList<INamedTypeSymbol> interfaces)
