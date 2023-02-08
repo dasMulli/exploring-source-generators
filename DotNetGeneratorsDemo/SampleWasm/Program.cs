@@ -1,8 +1,10 @@
 using System;
 using System.Runtime.InteropServices.JavaScript;
+using System.Runtime.Versioning;
 
 Console.WriteLine("Hello, Browser!");
 
+[SupportedOSPlatform("browser")]
 public partial class MyClass
 {
     [JSExport]
